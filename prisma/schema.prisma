@@ -1,0 +1,235 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+        
+// Enable Supabase auth integration
+model profiles {
+  id                    String    @id @default(dbgenerated("auth.uid()")) @db.Uuid
+  username              String?   @unique
+  first_name            String?
+  last_name             String?
+  avatar_url            String?
+  email                 String    @unique
+  phone                 String?
+  address               String?
+  city                  String?
+  state                 String?
+  postal_code           String?
+  country               String?
+  date_of_birth         DateTime?
+  gender                gender?
+  emergency_contact     Json?     // Stores name, phone, relation
+  status                user_status @default(active)
+  role                  user_role   @default(member)
+  created_at            DateTime   @default(now())
+  updated_at            DateTime   @updatedAt
+
+  // Relations
+  memberships          memberships[]
+  gym_admin            gym_admins?
+  diet_plans           diet_plans[]
+  workout_plans        workout_plans[]
+  payments             payments[]
+}
+
+model gyms {
+  id                  Int         @id @default(autoincrement())
+  name                String
+  address             String
+  city                String
+  state               String
+  country             String
+  postal_code         String
+  phone               String
+  email               String?     @unique
+  website_url         String?
+  contact_person      String
+  currency            String      @default("USD")
+  location            Json        // Stores latitude and longitude
+  status              gym_status  @default(active)
+  created_at          DateTime    @default(now())
+  updated_at          DateTime    @updatedAt
+
+  // Relations
+  memberships         memberships[]
+  membership_plans    membership_plans[]
+  gym_admin           gym_admins?
+}
+
+model gym_admins {
+  id                  Int       @id @default(autoincrement())
+  profile_id          String    @unique @db.Uuid
+  gym_id              Int       @unique
+  created_at          DateTime  @default(now())
+  updated_at          DateTime  @updatedAt
+
+  // Relations
+  profile             profiles  @relation(fields: [profile_id], references: [id])
+  gym                 gyms      @relation(fields: [gym_id], references: [id])
+
+  @@index([profile_id])
+  @@index([gym_id])
+}
+
+model membership_plans {
+  id                  Int           @id @default(autoincrement())
+  gym_id              Int
+  name                String
+  description         String?
+  duration_type       duration_type
+  duration_value      Int
+  category            String
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  // Relations
+  gym                 gyms          @relation(fields: [gym_id], references: [id])
+  pricing_history     plan_prices[]
+  memberships         memberships[]
+
+  @@index([gym_id])
+}
+
+model plan_prices {
+  id                  Int             @id @default(autoincrement())
+  plan_id             Int
+  price               Decimal         @db.Decimal(10, 2)
+  valid_from          DateTime
+  valid_until         DateTime
+  comments            String?
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+
+  // Relations
+  membership_plan     membership_plans @relation(fields: [plan_id], references: [id])
+
+  @@index([plan_id])
+}
+
+model memberships {
+  id                  Int             @id @default(autoincrement())
+  profile_id          String          @db.Uuid
+  gym_id              Int
+  plan_id             Int
+  start_date          DateTime
+  end_date            DateTime
+  status              membership_status @default(active)
+  created_at          DateTime        @default(now())
+  updated_at          DateTime        @updatedAt
+
+  // Relations
+  profile             profiles        @relation(fields: [profile_id], references: [id])
+  gym                 gyms           @relation(fields: [gym_id], references: [id])
+  membership_plan     membership_plans @relation(fields: [plan_id], references: [id])
+  payments            payments[]
+
+  @@index([profile_id])
+  @@index([gym_id])
+  @@index([plan_id])
+}
+
+model payments {
+  id                  Int           @id @default(autoincrement())
+  profile_id          String        @db.Uuid
+  membership_id       Int
+  amount              Decimal       @db.Decimal(10, 2)
+  payment_date        DateTime
+  payment_type        payment_type
+  payment_method      String
+  status              payment_status @default(pending)
+  comments            String?
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  // Relations
+  profile             profiles      @relation(fields: [profile_id], references: [id])
+  membership          memberships   @relation(fields: [membership_id], references: [id])
+
+  @@index([profile_id])
+  @@index([membership_id])
+}
+
+model diet_plans {
+  id                  Int           @id @default(autoincrement())
+  profile_id          String        @db.Uuid
+  name                String
+  description         String?
+  plan_data           Json?         // Stores structured diet plan
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  // Relations
+  profile             profiles      @relation(fields: [profile_id], references: [id])
+
+  @@index([profile_id])
+}
+
+model workout_plans {
+  id                  Int           @id @default(autoincrement())
+  profile_id          String        @db.Uuid
+  name                String
+  description         String?
+  plan_data           Json?         // Stores structured workout plan
+  created_at          DateTime      @default(now())
+  updated_at          DateTime      @updatedAt
+
+  // Relations
+  profile             profiles      @relation(fields: [profile_id], references: [id])
+
+  @@index([profile_id])
+}
+
+enum user_role {
+  admin
+  gym_admin
+  member
+}
+
+enum gender {
+  male
+  female
+  other
+}
+
+enum user_status {
+  active
+  inactive
+  suspended
+}
+
+enum gym_status {
+  active
+  inactive
+  suspended
+}
+
+enum membership_status {
+  active
+  expired
+  cancelled
+  suspended
+}
+
+enum payment_status {
+  pending
+  completed
+  failed
+  refunded
+}
+
+enum duration_type {
+  days
+  months
+  years
+}
+
+enum payment_type {
+  regular
+  discounted
+}
