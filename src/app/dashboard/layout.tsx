@@ -1,22 +1,23 @@
 import { AppSidebar } from "@/components/app-sidebar";
 import Navbar from "@/components/navbar";
+import TopMarginContainer from "@/components/top-margin-container";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import React from "react";
 
 function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mt-20">
+    <TopMarginContainer>
       <SidebarProvider
         style={{
           "--sidebar-width": "14rem",
-          // "--sidebar-width-mobile": "12rem",
+          "--sidebar-width-mobile": "12rem",
         }}
       >
         <Navbar />
         <AppSidebar />
-        <div className="mt-20">{children}</div>
+        <div className="">{children}</div>
       </SidebarProvider>
-    </div>
+    </TopMarginContainer>
   );
 }
 

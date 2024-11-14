@@ -37,7 +37,7 @@ const items = [
 export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" className="mt-16">
-      <SidebarContent className="mt-2 bg-background">
+      <SidebarContent className="mt-0 md:mt-2 bg-background">
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu className="space-y-2">
