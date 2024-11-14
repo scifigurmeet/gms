@@ -38,16 +38,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SidebarProvider
-            style={{
-              "--sidebar-width": "14rem",
-              // "--sidebar-width-mobile": "12rem",
-            }}
-          >
-            <Navbar />
-            <AppSidebar />
-            <div className="mt-20">{children}</div>
-          </SidebarProvider>
+          <div className="">{children}</div>
         </ThemeProvider>
       </body>
     </html>
